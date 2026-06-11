@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Alexandra McLarty</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --peach:      #E8896A;
+      --peach-pale: #F5D5C5;
+      --dusk:       #7A9BB5;
+      --dusk-pale:  #C8D9E6;
+      --sand:       #F7F2EE;
+      --stone:      #3D3530;
+      --stone-mid:  #7A6E68;
+      --stone-light:#B8AFA9;
+      --card-bg:    #FFFFFF;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background-color: var(--sand);
+      color: var(--stone);
+      min-height: 100vh;
+    }
+
+    /* Accent bar */
+    .accent-bar {
+      height: 4px;
+      background: linear-gradient(90deg, var(--peach) 0%, var(--peach-pale) 40%, var(--dusk-pale) 60%, var(--dusk) 100%);
+    }
+
+    /* Header */
+    header {
+      padding: 3.5rem 2rem 2.5rem;
+      max-width: 760px;
+      margin: 0 auto;
+    }
+
+    .name {
+      font-family: 'DM Serif Display', serif;
+      font-size: clamp(2rem, 5vw, 3rem);
+      font-weight: 400;
+      letter-spacing: -0.01em;
+      line-height: 1.1;
+      color: var(--stone);
+    }
+
+    .tagline {
+      margin-top: 0.6rem;
+      font-size: 0.95rem;
+      font-weight: 300;
+      color: var(--stone-mid);
+      letter-spacing: 0.02em;
+    }
+
+    .header-rule {
+      margin-top: 2rem;
+      border: none;
+      border-top: 1px solid var(--peach-pale);
+    }
+
+    /* Main */
+    main {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 0 2rem 4rem;
+    }
+
+    .section-label {
+      font-size: 0.7rem;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--stone-light);
+      margin-bottom: 1.25rem;
+    }
+
+    /* Repo grid */
+    .repo-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1rem;
+    }
+
+    .repo-card {
+      background: var(--card-bg);
+      border: 1px solid var(--peach-pale);
+      border-radius: 10px;
+      padding: 1.25rem 1.4rem;
+      text-decoration: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      transition: border-color 0.18s ease, transform 0.18s ease;
+    }
+
+    .repo-card:hover {
+      border-color: var(--peach);
+      transform: translateY(-2px);
+    }
+
+    .repo-name {
+      font-size: 0.95rem;
+      font-weight: 500;
+      color: var(--stone);
+    }
+
+    .repo-desc {
+      font-size: 0.82rem;
+      font-weight: 300;
+      color: var(--stone-mid);
+      line-height: 1.5;
+      flex: 1;
+    }
+
+    .repo-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-top: 0.5rem;
+    }
+
+    .repo-lang {
+      font-size: 0.72rem;
+      font-weight: 400;
+      color: var(--dusk);
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+
+    .repo-lang::before {
+      content: '';
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--dusk);
+      flex-shrink: 0;
+    }
+
+    .repo-updated {
+      font-size: 0.72rem;
+      color: var(--stone-light);
+    }
+
+    /* States */
+    .state {
+      font-size: 0.9rem;
+      color: var(--stone-mid);
+      font-weight: 300;
+      padding: 1rem 0;
+    }
+
+    .state.error { color: var(--peach); }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      padding: 2rem;
+      font-size: 0.75rem;
+      color: var(--stone-light);
+      font-weight: 300;
+      letter-spacing: 0.02em;
+    }
+
+    footer a {
+      color: var(--dusk);
+      text-decoration: none;
+    }
+
+    footer a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+
+  <div class="accent-bar"></div>
+
+  <header>
+    <h1 class="name">Alexandra McLarty</h1>
+    <p class="tagline">Instructional Designer &amp; Developer</p>
+    <hr class="header-rule" />
+  </header>
+
+  <main>
+    <p class="section-label">Public repositories</p>
+    <div class="repo-grid" id="repo-grid">
+      <p class="state" id="status">Loading repositories&hellip;</p>
+    </div>
+  </main>
+
+  <footer>
+    <a href="https://github.com/alexandramclarty" target="_blank" rel="noopener">github.com/alexandramclarty</a>
+  </footer>
+
+  <script>
+    const USERNAME = 'alexandramclarty';
+    const GRID     = document.getElementById('repo-grid');
+    const STATUS   = document.getElementById('status');
+
+    function timeAgo(dateStr) {
+      const diff = Date.now() - new Date(dateStr).getTime();
+      const days = Math.floor(diff / 86400000);
+      if (days === 0) return 'today';
+      if (days === 1) return 'yesterday';
+      if (days < 30) return `${days}d ago`;
+      const months = Math.floor(days / 30);
+      if (months < 12) return `${months}mo ago`;
+      return `${Math.floor(months / 12)}y ago`;
+    }
+
+    async function loadRepos() {
+      try {
+        let allRepos = [];
+        let page = 1;
+
+        while (true) {
+          const res = await fetch(
+            `https://api.github.com/users/${USERNAME}/repos?type=public&sort=updated&per_page=100&page=${page}`
+          );
+          if (!res.ok) throw new Error(`GitHub API error: ${res.status}`);
+          const batch = await res.json();
+          if (!batch.length) break;
+          allRepos = allRepos.concat(batch);
+          if (batch.length < 100) break;
+          page++;
+        }
+
+        // Filter out the user page repo itself and forks (optional — remove fork filter if you want forks shown)
+        const repos = allRepos
+          .filter(r => r.name !== `${USERNAME}.github.io`)
+          .sort((a, b) => new Date(b.pushed_at) - new Date(a.pushed_at));
+
+        if (!repos.length) {
+          STATUS.textContent = 'No public repositories yet.';
+          return;
+        }
+
+        GRID.innerHTML = repos.map(r => `
+          <a class="repo-card" href="${r.html_url}" target="_blank" rel="noopener">
+            <span class="repo-name">${r.name}</span>
+            ${r.description ? `<span class="repo-desc">${r.description}</span>` : '<span class="repo-desc" style="font-style:italic;opacity:0.6">No description</span>'}
+            <div class="repo-meta">
+              ${r.language ? `<span class="repo-lang">${r.language}</span>` : ''}
+              <span class="repo-updated">updated ${timeAgo(r.pushed_at)}</span>
+            </div>
+          </a>
+        `).join('');
+
+      } catch (err) {
+        STATUS.className = 'state error';
+        STATUS.textContent = `Couldn't load repositories: ${err.message}`;
+      }
+    }
+
+    loadRepos();
+  </script>
+
+</body>
+</html>
