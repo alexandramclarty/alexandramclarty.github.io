@@ -89,11 +89,11 @@
     }
 
     .repo-card {
+      position: relative;
       background: var(--card-bg);
       border: 1px solid var(--peach-pale);
       border-radius: 10px;
       padding: 1.25rem 1.4rem;
-      text-decoration: none;
       display: flex;
       flex-direction: column;
       gap: 0.4rem;
@@ -109,6 +109,20 @@
       font-size: 0.95rem;
       font-weight: 500;
       color: var(--stone);
+      text-decoration: none;
+    }
+
+    /* Makes the whole card clickable while leaving the "code" link on top */
+    .repo-name::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 10px;
+    }
+
+    .repo-name:focus-visible::after {
+      outline: 2px solid var(--dusk);
+      outline-offset: 2px;
     }
 
     .repo-desc {
@@ -150,6 +164,21 @@
       color: var(--stone-light);
     }
 
+    .repo-code {
+      position: relative;
+      z-index: 1;
+      margin-left: auto;
+      font-size: 0.72rem;
+      color: var(--stone-light);
+      text-decoration: none;
+      border-bottom: 1px solid transparent;
+    }
+
+    .repo-code:hover {
+      color: var(--peach);
+      border-bottom-color: var(--peach-pale);
+    }
+
     /* States */
     .state {
       font-size: 0.9rem;
@@ -176,6 +205,11 @@
     }
 
     footer a:hover { text-decoration: underline; }
+
+    @media (prefers-reduced-motion: reduce) {
+      .repo-card { transition: none; }
+      .repo-card:hover { transform: none; }
+    }
   </style>
 </head>
 <body>
@@ -215,6 +249,19 @@
       return `${Math.floor(months / 12)}y ago`;
     }
 
+    function escapeHtml(str) {
+      return String(str).replace(/[&<>"']/g, c => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      })[c]);
+    }
+
+    // Where the card should point: published site if there is one, repo if not.
+    function siteUrl(repo) {
+      if (repo.homepage) return repo.homepage;                       // covers custom domains
+      if (repo.has_pages) return `https://${USERNAME}.github.io/${repo.name}/`;
+      return repo.html_url;
+    }
+
     async function loadRepos() {
       try {
         let allRepos = [];
@@ -242,16 +289,23 @@
           return;
         }
 
-        GRID.innerHTML = repos.map(r => `
-          <a class="repo-card" href="${r.html_url}" target="_blank" rel="noopener">
-            <span class="repo-name">${r.name}</span>
-            ${r.description ? `<span class="repo-desc">${r.description}</span>` : '<span class="repo-desc" style="font-style:italic;opacity:0.6">No description</span>'}
+        GRID.innerHTML = repos.map(r => {
+          const url     = siteUrl(r);
+          const hasSite = url !== r.html_url;
+
+          return `
+          <div class="repo-card">
+            <a class="repo-name" href="${escapeHtml(url)}" target="_blank" rel="noopener">${escapeHtml(r.name)}</a>
+            ${r.description
+              ? `<span class="repo-desc">${escapeHtml(r.description)}</span>`
+              : '<span class="repo-desc" style="font-style:italic;opacity:0.6">No description</span>'}
             <div class="repo-meta">
-              ${r.language ? `<span class="repo-lang">${r.language}</span>` : ''}
+              ${r.language ? `<span class="repo-lang">${escapeHtml(r.language)}</span>` : ''}
               <span class="repo-updated">updated ${timeAgo(r.pushed_at)}</span>
+              ${hasSite ? `<a class="repo-code" href="${escapeHtml(r.html_url)}" target="_blank" rel="noopener">code</a>` : ''}
             </div>
-          </a>
-        `).join('');
+          </div>`;
+        }).join('');
 
       } catch (err) {
         STATUS.className = 'state error';
