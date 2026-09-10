@@ -159,11 +159,6 @@
       flex-shrink: 0;
     }
 
-    .repo-updated {
-      font-size: 0.72rem;
-      color: var(--stone-light);
-    }
-
     .repo-code {
       position: relative;
       z-index: 1;
@@ -238,17 +233,6 @@
     const GRID     = document.getElementById('repo-grid');
     const STATUS   = document.getElementById('status');
 
-    function timeAgo(dateStr) {
-      const diff = Date.now() - new Date(dateStr).getTime();
-      const days = Math.floor(diff / 86400000);
-      if (days === 0) return 'today';
-      if (days === 1) return 'yesterday';
-      if (days < 30) return `${days}d ago`;
-      const months = Math.floor(days / 30);
-      if (months < 12) return `${months}mo ago`;
-      return `${Math.floor(months / 12)}y ago`;
-    }
-
     function escapeHtml(str) {
       return String(str).replace(/[&<>"']/g, c => ({
         '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
@@ -280,6 +264,8 @@
         }
 
         // Filter out the user page repo itself and forks (optional — remove fork filter if you want forks shown)
+        // To order the list alphabetically instead, swap the sort for:
+        //   .sort((a, b) => a.name.localeCompare(b.name));
         const repos = allRepos
           .filter(r => r.name !== `${USERNAME}.github.io`)
           .sort((a, b) => new Date(b.pushed_at) - new Date(a.pushed_at));
@@ -293,17 +279,18 @@
           const url     = siteUrl(r);
           const hasSite = url !== r.html_url;
 
+          const meta = [
+            r.language ? `<span class="repo-lang">${escapeHtml(r.language)}</span>` : '',
+            hasSite ? `<a class="repo-code" href="${escapeHtml(r.html_url)}" target="_blank" rel="noopener">code</a>` : ''
+          ].filter(Boolean).join('');
+
           return `
           <div class="repo-card">
             <a class="repo-name" href="${escapeHtml(url)}" target="_blank" rel="noopener">${escapeHtml(r.name)}</a>
             ${r.description
               ? `<span class="repo-desc">${escapeHtml(r.description)}</span>`
               : '<span class="repo-desc" style="font-style:italic;opacity:0.6">No description</span>'}
-            <div class="repo-meta">
-              ${r.language ? `<span class="repo-lang">${escapeHtml(r.language)}</span>` : ''}
-              <span class="repo-updated">updated ${timeAgo(r.pushed_at)}</span>
-              ${hasSite ? `<a class="repo-code" href="${escapeHtml(r.html_url)}" target="_blank" rel="noopener">code</a>` : ''}
-            </div>
+            ${meta ? `<div class="repo-meta">${meta}</div>` : ''}
           </div>`;
         }).join('');
 
